@@ -1,180 +1,155 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useCallback } from "react";
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { gameState, resetScores } from "./gameState";
 
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+export default function MenuScreen() {
+  const router = useRouter();
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
+  const [phases, setPhases] = useState(gameState.phases);
+  // Stan punktów w React
+  const [scores, setScores] = useState({ ...gameState.scores });
+
+  // 👉 KLUCZOWE: za każdym razem, gdy wracasz na ten ekran, pobieramy najświeższe punkty!
+  useFocusEffect(
+      useCallback(() => {
+        setScores({ ...gameState.scores });
+      }, [])
+  );
+
+  const togglePhase = (key: keyof typeof phases) => {
+    const updated = { ...phases, [key]: !phases[key] };
+    gameState.phases = updated;
+    setPhases(updated);
   };
-  const theme = useTheme();
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+  const handleStartGame = () => {
+    gameState.hasStartedOnce = true;
+    router.push("/");
+  };
+
+  const handleResetScores = () => {
+    resetScores();
+    setScores({ ...gameState.scores });
+  };
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>BossTheGame</Text>
+        <Text style={styles.subtitle}>Wybór Faz & Wyniki</Text>
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
-            </Pressable>
-          </ExternalLink>
-        </ThemedView>
+        {/* TABELA WYNIKÓW */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Synowie Bosa:</Text>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+          <View style={styles.scoreRow}>
+            <Text style={[styles.playerBadge, { backgroundColor: "#FFD700", color: "#000" }]}>Żółty</Text>
+            <Text style={styles.scoreText}>{scores.yellow} pkt</Text>
+          </View>
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
+          <View style={styles.scoreRow}>
+            <Text style={[styles.playerBadge, { backgroundColor: "#1E90FF" }]}>Niebieski</Text>
+            <Text style={styles.scoreText}>{scores.blue} pkt</Text>
+          </View>
 
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+          <View style={styles.scoreRow}>
+            <Text style={[styles.playerBadge, { backgroundColor: "#32CD32" }]}>Zielony</Text>
+            <Text style={styles.scoreText}>{scores.green} pkt</Text>
+          </View>
 
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+          <View style={styles.scoreRow}>
+            <Text style={[styles.playerBadge, { backgroundColor: "#FF4500" }]}>Czerwony</Text>
+            <Text style={styles.scoreText}>{scores.red} pkt</Text>
+          </View>
 
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
-    </ScrollView>
+          <Pressable style={styles.resetButton} onPress={handleResetScores}>
+            <Text style={styles.resetButtonText}>Zresetuj punkty</Text>
+          </Pressable>
+        </View>
+
+        {/* WYBÓR FAZ */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Aktywne Fazy:</Text>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Fierballe</Text>
+            <Switch value={phases.fireballs} onValueChange={() => togglePhase("fireballs")} />
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Język</Text>
+            <Switch value={phases.tongue} onValueChange={() => togglePhase("tongue")} />
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Pole</Text>
+            <Switch value={phases.sector} onValueChange={() => togglePhase("sector")} />
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Lasery</Text>
+            <Switch value={phases.lasers} onValueChange={() => togglePhase("lasers")} />
+          </View>
+        </View>
+
+        {/* PRZYCISK START */}
+        <Pressable style={styles.playButton} onPress={handleStartGame}>
+          <Text style={styles.playButtonText}>ROZPOCZNIJ GRĘ</Text>
+        </Pressable>
+      </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: "#121212" },
+  content: { padding: 24, paddingTop: 50, alignItems: "center" },
+  title: { fontSize: 32, fontWeight: "bold", color: "#FFF" },
+  subtitle: { fontSize: 16, color: "#888", marginBottom: 20 },
+  card: {
+    width: "100%",
+    backgroundColor: "#1E1E1E",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 18,
   },
-  contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  cardTitle: { fontSize: 17, fontWeight: "bold", color: "#FFF", marginBottom: 14 },
+  scoreRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
   },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
+  playerBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    fontWeight: "bold",
+    color: "#FFF",
   },
-  titleContainer: {
-    gap: Spacing.three,
-    alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+  scoreText: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
+  resetButton: {
+    marginTop: 12,
+    alignSelf: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: "#333",
   },
-  centerText: {
-    textAlign: 'center',
+  resetButtonText: { color: "#AAA", fontSize: 13 },
+  switchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
   },
-  pressed: {
-    opacity: 0.7,
+  switchLabel: { color: "#DDD", fontSize: 16 },
+  playButton: {
+    width: "100%",
+    backgroundColor: "#E94560",
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 8,
   },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
-  },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-  },
-  collapsibleContent: {
-    alignItems: 'center',
-  },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
-  },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
-  },
+  playButtonText: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
 });

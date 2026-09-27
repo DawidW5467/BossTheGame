@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { gameState } from "./gameState";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
     View,
     Pressable,
@@ -14,6 +16,7 @@ import {
     useImage,
     Path,
     Skia,
+    Circle,
 } from "@shopify/react-native-skia";
 
 import { Boss } from "./boss";
@@ -180,7 +183,27 @@ function GenerateCornerButtons(
 /*
  * Główny ekran gry
  */
+
+function createSectorPath(cx: number, cy: number, r: number, startAngle: number, sweepAngle: number) {
+    const path = Skia.Path.Make();
+    path.moveTo(cx, cy);
+    const steps = 32;
+    for (let i = 0; i <= steps; i++) {
+        const a = startAngle + (sweepAngle * i) / steps;
+        path.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+    path.close();
+    return path;
+}
+
 export default function Index() {
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!gameState.hasStartedOnce) {
+            router.replace("/explore");
+        }
+    }, []);
 
     const { width, height } = useWindowDimensions();
 
@@ -196,6 +219,11 @@ export default function Index() {
     const boss_img = useImage(
         require("../../assets/images/boss-normal.png")
     );
+
+    const playerYellowImg = useImage(require("../../assets/images/players/yellow_bg.png"));
+    const playerBlueImg   = useImage(require("../../assets/images/players/blue_bg.png"));
+    const playerGreenImg  = useImage(require("../../assets/images/players/green_bg.png"));
+    const playerRedImg    = useImage(require("../../assets/images/players/red_bg.png"));
 
 
     /*
@@ -281,76 +309,54 @@ export default function Index() {
         ];
 
 
-        gameRef.current = new Game(
-            bossRef.current,
-            playersRef.current
-        );
+        gameRef.current = new Game(bossRef.current, playersRef.current, radius, () => {
+            setTimeout(() => {
+                router.replace("/explore");
+            }, 1200);
+        });
     }
 
 
     /*
      * Pętla gry
      */
-    useEffect(() => {
+    useFocusEffect(
+        useCallback(() => {
+            // Jeśli gra jeszcze nie wystartowała z menu, nie rób nic
+            if (!gameState.hasStartedOnce || !gameRef.current) {
+                return;
+            }
 
-        if (!gameRef.current) {
-            return;
-        }
+            // Uruchomienie gry (resetuje stan i graczy)
+            gameRef.current.start();
 
+            let animationFrame: number;
+            let lastTime = 0;
 
-        /*
-         * Uruchomienie gry
-         */
-        gameRef.current.start();
+            const gameLoop = (time: number) => {
+                const deltaTime = lastTime === 0 ? 0 : (time - lastTime) / 1000;
+                lastTime = time;
 
+                // Ograniczenie skoków lagów
+                const safeDelta = Math.min(deltaTime, 0.033);
 
-        let animationFrame: number;
+                gameRef.current?.update(safeDelta);
 
+                // Wymuszenie odświeżenia klatki
+                forceRender((value: number) => value + 1);
 
-        let lastTime = 0;
+                animationFrame = requestAnimationFrame(gameLoop);
+            };
 
-        const gameLoop = (time: number) => {
+            animationFrame = requestAnimationFrame(gameLoop);
 
-            const deltaTime =
-                lastTime === 0
-                    ? 0
-                    : (time - lastTime) / 1000;
-
-            lastTime = time;
-
-
-            gameRef.current?.update(
-                deltaTime
-            );
-
-
-            forceRender(
-                (value: number) => value + 1
-            );
-
-
-            animationFrame =
-                requestAnimationFrame(gameLoop);
-        };
-
-
-        animationFrame =
-            requestAnimationFrame(gameLoop);
-
-
-        /*
-         * Czyszczenie po opuszczeniu ekranu
-         */
-        return () => {
-
-            cancelAnimationFrame(
-                animationFrame
-            );
-
-            gameRef.current?.stop();
-        };
-
-    }, [boss_img]);
+            // Gdy wychodzimy z ekranu gry (np. po śmierci lub kliknięciu w menu)
+            return () => {
+                cancelAnimationFrame(animationFrame);
+                gameRef.current?.stop();
+            };
+        }, [])
+    );
 
 
     /*
@@ -360,33 +366,8 @@ export default function Index() {
         value: ButtonValue
     ) => {
 
-        console.log(
-            "Kliknięto przycisk:",
-            value
-        );
+        gameRef.current?.changePlayerDirection(value); // nie musimy logować a to wystarczy
 
-
-        switch (value) {
-
-            case "blue":
-                console.log("BLUE");
-                break;
-
-
-            case "red":
-                console.log("RED");
-                break;
-
-
-            case "green":
-                console.log("GREEN");
-                break;
-
-
-            case "yellow":
-                console.log("YELLOW");
-                break;
-        }
     };
 
 
@@ -408,15 +389,87 @@ export default function Index() {
                     height
                 )}
 
+                {(() => {
+                    const sector = gameRef.current?.currentPhase?.getSector?.();
+                    if (!sector) return null;
+                    return (
+                        <Path
+                            path={createSectorPath(width / 2, height / 2, radius, sector.startAngle, sector.sweepAngle)}
+                            color={sector.isDanger ? `rgba(235, 30, 30, ${sector.opacity})` : `rgba(255, 255, 255, ${sector.opacity})`}
+                        />
+                    );
+                })()}
+
 
                 {/* OKRĄG ARENY */}
-                {GeneratePath(
-                    radius,
-                    width / 2,
-                    height / 2,
-                    1
-                )}
+                <Circle
+                    cx={width / 2}
+                    cy={height / 2}
+                    r={radius}
+                    style="stroke"
+                    strokeWidth={1}
+                    color="white"
+                />
 
+                {gameRef.current?.currentPhase?.getMarkers().map((marker, i) => (
+                    <Circle
+                        key={`marker-${i}`}
+                        cx={marker.x}
+                        cy={marker.y}
+                        r={10}
+                        color="rgba(255, 60, 0, 0.75)"
+                    />
+                ))}
+
+                {gameRef.current?.currentPhase?.getFireballs().map((fb, i) => (
+                    <Circle
+                        key={`fb-${i}`}
+                        cx={fb.x}
+                        cy={fb.y}
+                        r={fb.radius}
+                        color="#FF4500"
+                    />
+                ))}
+
+                {(() => {
+                    const tongue = gameRef.current?.currentPhase?.getTongue?.();
+                    if (!tongue) return null;
+                    return (
+                        <Path
+                            path={(() => {
+                                const p = Skia.Path.Make();
+                                p.moveTo(tongue.x1, tongue.y1);
+                                p.lineTo(tongue.x2, tongue.y2);
+                                return p;
+                            })()}
+                            color="#FF2E63"
+                            style="stroke"
+                            strokeWidth={22}
+                            strokeCap="round"
+                        />
+                    );
+                })()}
+
+                {/* FAZA Z LASERAMI */}
+                {(() => {
+                    const laserData = (gameRef.current?.currentPhase as any)?.getLasers?.();
+                    if (!laserData || !laserData.lines) return null;
+
+                    return laserData.lines.map((line: { x1: number; y1: number; x2: number; y2: number }, idx: number) => (
+                        <Path
+                            key={`laser-${idx}`}
+                            path={(() => {
+                                const p = Skia.Path.Make();
+                                p.moveTo(line.x1, line.y1);
+                                p.lineTo(line.x2, line.y2);
+                                return p;
+                            })()}
+                            color={laserData.isDanger ? "#FF0033" : "rgba(255, 60, 60, 0.4)"}
+                            style="stroke"
+                            strokeWidth={laserData.isDanger ? 8 : 2}
+                        />
+                    ));
+                })()}
 
                 {/* BOSS */}
                 {bossRef.current?.draw(
@@ -428,19 +481,19 @@ export default function Index() {
                     let img = null;
 
                     if (player.color === "yellow") {
-                        img = boss_img;
+                        img = playerYellowImg;
                     }
 
                     if (player.color === "blue") {
-                        img = boss_img;
+                        img = playerBlueImg;
                     }
 
                     if (player.color === "red") {
-                        img = boss_img;
+                        img = playerRedImg;
                     }
 
                     if (player.color === "green") {
-                        img = boss_img;
+                        img = playerGreenImg;
                     }
 
                     return (

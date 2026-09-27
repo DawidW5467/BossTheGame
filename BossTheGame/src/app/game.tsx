@@ -1,124 +1,137 @@
 import { Boss } from "./boss";
 import { Player } from "./player";
+import {Phase, FireballPhase, TonguePhase, SectorPhase, LaserPhase} from "./phases";
+import { gameState } from "./gameState";
 
 
 export class Game {
 
     boss: Boss;
-
     players: Player[];
+    radius: number;
 
-    private running: boolean;
+    state: "ROULETTE" | "PHASE" = "ROULETTE";
+    stateTimer: number = 0;
 
-    level: number;
+    availablePhases: (() => Phase)[] = [
+        () => new FireballPhase(),
+        () => new TonguePhase(),
+        () => new SectorPhase(),
+    ];
 
+    currentPhase: Phase | null = null;
+    private running: boolean = false;
+    onGameOver?: () => void;
 
     constructor(
         boss: Boss,
-        players: Player[]
+        players: Player[],
+        radius: number,
+        onGameOver?: ()=> void,
     ) {
-
         this.boss = boss;
-
         this.players = players;
-
-        this.running = false;
-
-        this.level = 1;
+        this.radius = radius;
+        this.onGameOver = onGameOver;
     }
 
+    getActivePhases(): (() => Phase)[] {
+        const pool: (() => Phase)[] = [];
+        if (gameState.phases.fireballs) pool.push(() => new FireballPhase());
+        if (gameState.phases.tongue) pool.push(() => new TonguePhase());
+        if (gameState.phases.sector) pool.push(() => new SectorPhase());
+        if (gameState.phases.lasers) pool.push(() => new LaserPhase());
+
+        if (pool.length === 0) pool.push(() => new FireballPhase());
+        return pool;
+    }
 
     start() {
-
-        if (this.running) {
-            return;
-        }
-
         this.running = true;
-
-        this.boss.startRotation();
+        for (const p of this.players) p.reset();
+        this.startRoulette();
     }
 
-
     stop() {
-
-        if (!this.running) {
-            return;
-        }
-
         this.running = false;
+    }
+
+    startRoulette() {
+        this.state = "ROULETTE";
+        this.stateTimer = 1.2;
+        this.boss.setFastSpin(true);
+        this.currentPhase = null;
+    }
+
+    startNextPhase() {
+        this.state = "PHASE";
+        this.boss.setFastSpin(false);
+
+        const pool = this.getActivePhases();
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        this.currentPhase = pool[randomIndex]();
+        this.currentPhase.start(this.boss.x, this.boss.y, this.radius);
     }
 
 
     update(deltaTime: number) {
+        if (!this.running) return;
 
-        if (!this.running) {
-            return;
-        }
-
-
-        /*
-         * Aktualizacja bossa
-         */
-        this.boss.update();
-
-
-        /*
-         * Aktualizacja wszystkich graczy
-         */
+        this.boss.update(deltaTime);
         for (const player of this.players) {
-
             player.update(deltaTime);
         }
 
+        if (this.state === "ROULETTE") {
+            this.stateTimer -= deltaTime;
+            if (this.stateTimer <= 0) {
+                this.startNextPhase();
+            }
+        } else if (this.state === "PHASE" && this.currentPhase) {
+            this.currentPhase.update(deltaTime);
+            this.checkCollisions();
 
-        /*
-         * Boss cały czas się obraca
-         */
-        if (!this.boss.isRotating) {
+            if (this.currentPhase.isFinished) {
+                for (const player of this.players) {
+                    if (player.isAlive) {
+                        gameState.scores[player.color]++;
+                    }
+                }
+                this.startRoulette();
+            }
+        }
 
-            this.boss.startRotation();
+        const allDead = this.players.every((p) => !p.isAlive);
+        if (allDead && this.running) {
+            this.stop();
+            if (this.onGameOver) this.onGameOver();
         }
     }
 
+    checkCollisions() {
+        if (!this.currentPhase) return;
 
-    changePlayerDirection(
-        color:
-            | "yellow"
-            | "blue"
-            | "red"
-            | "green"
-    ) {
-
-        const player =
-            this.players.find(
-                player => player.color === color
-            );
-
-
-        if (!player) {
-            return;
+        const fireballs = this.currentPhase.getFireballs?.() || [];
+        for (const fb of fireballs) {
+            for (const player of this.players) {
+                if (!player.isAlive) continue;
+                const dx = fb.x - player.x;
+                const dy = fb.y - player.y;
+                if (Math.sqrt(dx * dx + dy * dy) < player.hitboxRadius + fb.radius) {
+                    player.isAlive = false;
+                }
+            }
         }
 
-
-        player.changeDirection();
+        if (this.currentPhase.checkCustomCollisions) {
+            this.currentPhase.checkCustomCollisions(this.players);
+        }
     }
 
-
-    setLevel(level: number) {
-
-        this.level = level;
-    }
-
-
-    nextLevel() {
-
-        this.level++;
-    }
-
-
-    isRunning() {
-
-        return this.running;
+    changePlayerDirection(color: "yellow" | "blue" | "red" | "green") {
+        const player = this.players.find((p) => p.color === color);
+        if (player && player.isAlive) {
+            player.changeDirection();
+        }
     }
 }

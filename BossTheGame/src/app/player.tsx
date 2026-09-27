@@ -35,6 +35,8 @@ export class Player {
 
     color: PlayerColor;
 
+    isAlive: boolean = true;
+    hitboxRadius: number = 18;
 
     constructor(
         centerX: number,
@@ -64,6 +66,10 @@ export class Player {
 
         this.x = centerX + Math.cos(this.angle) * radius;
         this.y = centerY + Math.sin(this.angle) * radius;
+    }
+
+    reset() {
+        this.isAlive = true;
     }
 
 
@@ -111,7 +117,7 @@ export class Player {
      */
     draw(img: ReturnType<typeof useImage>) {
 
-        if (!img) {
+        if (!img || !this.isAlive) {
             return null;
         }
 
@@ -128,9 +134,17 @@ export class Player {
                 fit="contain"
 
                 origin={{
+
                     x: this.x,
                     y: this.y
                 }}
+
+                transform={[
+                    {
+                        rotate: Math.PI / 2,
+                    }
+                ]}
+
             />
         );
     }

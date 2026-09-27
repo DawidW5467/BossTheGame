@@ -16,6 +16,12 @@ export class Boss {
     private rotationDuration: number;
     private rotationCount: number;
 
+    private currentSpeed: number = 2;
+
+    setFastSpin(isFast: boolean) {
+        this.currentSpeed = isFast ? 12: 2.5;
+    }
+
     constructor(
         x: number,
         y: number,
@@ -60,27 +66,8 @@ export class Boss {
         this.rotation = 0;
     }
 
-    update() {
-        if (!this.isRotating) {
-            return;
-        }
-
-        const now = Date.now();
-
-        const elapsed = now - this.rotationStart;
-
-        let progress = elapsed / this.rotationDuration;
-
-        if (progress >= 1) {
-            progress = 1;
-            this.isRotating = false;
-        }
-
-        this.rotation =
-            progress *
-            Math.PI *
-            2 *
-            this.rotationCount;
+    update(deltaTime: number = 0.016) {
+        this.rotation = (this.rotation + this.currentSpeed * deltaTime) % (Math.PI * 2);
     }
 
     draw(img: ReturnType<typeof useImage>) {
