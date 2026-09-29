@@ -27,9 +27,7 @@ import {Player} from "./player";
 type ButtonValue = "blue" | "red" | "green" | "yellow";
 
 
-/*
- * Rysowanie okręgu
- */
+
 function DrawCircle(
     radius: number,
     centerX: number,
@@ -56,9 +54,7 @@ function DrawCircle(
 }
 
 
-/*
- * Okrąg na arenie
- */
+
 function GeneratePath(
     radius: number,
     centerX: number,
@@ -76,9 +72,7 @@ function GeneratePath(
 }
 
 
-/*
- * Tło
- */
+
 function GenerateBackground(
     background: ReturnType<typeof useImage>,
     width: number,
@@ -101,9 +95,7 @@ function GenerateBackground(
 }
 
 
-/*
- * Przyciski w rogach ekranu
- */
+
 function GenerateCornerButtons(
     onPress: (value: ButtonValue) => void
 ) {
@@ -113,7 +105,6 @@ function GenerateCornerButtons(
             pointerEvents="box-none"
         >
 
-            {/* LEWY GÓRNY - ŻÓŁTY */}
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -129,7 +120,6 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* PRAWY GÓRNY - NIEBIESKI */}
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -145,7 +135,6 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* LEWY DOLNY - CZERWONY */}
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -161,7 +150,6 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* PRAWY DOLNY - ZIELONY */}
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -180,9 +168,7 @@ function GenerateCornerButtons(
     );
 }
 
-/*
- * Główny ekran gry
- */
+
 
 function createSectorPath(cx: number, cy: number, r: number, startAngle: number, sweepAngle: number) {
     const path = Skia.Path.Make();
@@ -209,9 +195,7 @@ export default function Index() {
 
     const radius = 175;
 
-    /*
-     * Obrazy
-     */
+
     const background = useImage(
         require("../../assets/images/background.png")
     );
@@ -226,25 +210,17 @@ export default function Index() {
     const playerRedImg    = useImage(require("../../assets/images/players/red_bg.png"));
 
 
-    /*
-     * Boss i Game przechowywane w ref,
-     * żeby nie tworzyć ich ponownie przy każdym renderze.
-     */
+
     const bossRef = useRef<Boss | null>(null);
     const gameRef = useRef<Game | null>(null);
     const playersRef = useRef<Player[]>([]);
 
 
-    /*
-     * Wymusza ponowne rysowanie ekranu
-     * po każdym klatce gry.
-     */
+
     const [, forceRender] = useState<number>(0);
 
 
-    /*
-     * Utworzenie bossa i gry
-     */
+
     if (
         bossRef.current === null &&
         boss_img !== null
@@ -263,7 +239,6 @@ export default function Index() {
 
         playersRef.current = [
 
-            // ŻÓŁTY
             new Player(
                 bossX,
                 bossY,
@@ -274,7 +249,7 @@ export default function Index() {
                 0
             ),
 
-            // NIEBIESKI
+
             new Player(
                 bossX,
                 bossY,
@@ -285,7 +260,7 @@ export default function Index() {
                 Math.PI / 2
             ),
 
-            // ZIELONY
+
             new Player(
                 bossX,
                 bossY,
@@ -296,7 +271,6 @@ export default function Index() {
                 Math.PI
             ),
 
-            // CZERWONY
             new Player(
                 bossX,
                 bossY,
@@ -317,17 +291,13 @@ export default function Index() {
     }
 
 
-    /*
-     * Pętla gry
-     */
+
     useFocusEffect(
         useCallback(() => {
-            // Jeśli gra jeszcze nie wystartowała z menu, nie rób nic
             if (!gameState.hasStartedOnce || !gameRef.current) {
                 return;
             }
 
-            // Uruchomienie gry (resetuje stan i graczy)
             gameRef.current.start();
 
             let animationFrame: number;
@@ -337,12 +307,10 @@ export default function Index() {
                 const deltaTime = lastTime === 0 ? 0 : (time - lastTime) / 1000;
                 lastTime = time;
 
-                // Ograniczenie skoków lagów
                 const safeDelta = Math.min(deltaTime, 0.033);
 
                 gameRef.current?.update(safeDelta);
 
-                // Wymuszenie odświeżenia klatki
                 forceRender((value: number) => value + 1);
 
                 animationFrame = requestAnimationFrame(gameLoop);
@@ -350,7 +318,6 @@ export default function Index() {
 
             animationFrame = requestAnimationFrame(gameLoop);
 
-            // Gdy wychodzimy z ekranu gry (np. po śmierci lub kliknięciu w menu)
             return () => {
                 cancelAnimationFrame(animationFrame);
                 gameRef.current?.stop();
@@ -359,14 +326,11 @@ export default function Index() {
     );
 
 
-    /*
-     * Obsługa przycisków
-     */
     const handleButtonPress = (
         value: ButtonValue
     ) => {
 
-        gameRef.current?.changePlayerDirection(value); // nie musimy logować a to wystarczy
+        gameRef.current?.changePlayerDirection(value);
 
     };
 
@@ -376,13 +340,10 @@ export default function Index() {
         <View style={styles.container}>
 
             <StatusBar hidden />
-            {/* ========================= */}
-            {/* GRA */}
-            {/* ========================= */}
+
 
             <Canvas style={styles.canvas}>
 
-                {/* TŁO */}
                 {GenerateBackground(
                     background,
                     width,
@@ -401,7 +362,6 @@ export default function Index() {
                 })()}
 
 
-                {/* OKRĄG ARENY */}
                 <Circle
                     cx={width / 2}
                     cy={height / 2}
@@ -450,7 +410,6 @@ export default function Index() {
                     );
                 })()}
 
-                {/* FAZA Z LASERAMI */}
                 {(() => {
                     const laserData = (gameRef.current?.currentPhase as any)?.getLasers?.();
                     if (!laserData || !laserData.lines) return null;
@@ -471,7 +430,6 @@ export default function Index() {
                     ));
                 })()}
 
-                {/* BOSS */}
                 {bossRef.current?.draw(
                     boss_img
                 )}
@@ -506,9 +464,6 @@ export default function Index() {
             </Canvas>
 
 
-            {/* ========================= */}
-            {/* PRZYCISKI */}
-            {/* ========================= */}
 
             {GenerateCornerButtons(
                 handleButtonPress
@@ -520,7 +475,7 @@ export default function Index() {
 
 
 /*
- * STYLE
+ raz dwa dwa trzy cztery player games to moja gra michał wojtas się nazywam i w kurczaki wciąż wygrywam moja torba to mój skarb żyd na karku wciąż ma garb od king vona zjadłem dreda tu przystanek tu forteca bosss na mapie to nie żąrt te pieczarki to jest bart kiedy gościsz u mnie w dzielni to napewno zjesz w pizzerni jesteśmy głodni jak ptaki ten bogracz to nie są flaki 
  */
 const styles = StyleSheet.create({
 
@@ -534,9 +489,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Kontener zajmuje cały ekran.
-     */
+
     buttonsContainer: {
         position: "absolute",
         top: 0,
@@ -546,9 +499,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Rozmiar pojedynczego przycisku.
-     */
+
     button: {
         position: "absolute",
 
@@ -557,9 +508,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Sam obraz przycisku.
-     */
+
     buttonImage: {
         width: "100%",
         height: "100%",
@@ -568,9 +517,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * LEWY GÓRNY
-     */
+
     topLeft: {
         top: -15,
         left: -15,
