@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Native - Quiz Interaktywny</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b1329',
+                        darkCard: '#131e3a',
+                        reactBlue: '#3478f6',
+                        reactCyan: '#00d8ff',
+                        darkBorder: '#1e294b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #070c1b 0%, #0b1329 50%, #101c3d 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(19, 30, 58, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 216, 255, 0.15);
+        }
+        .code-window {
+            background: #0d152b;
+            border: 1px solid rgba(52, 120, 246, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col min-h-screen justify-between selection:bg-reactCyan selection:text-black">
+
+    <header class="w-full border-b border-darkBorder py-4 px-6 md:px-12 flex justify-between items-center glass-panel sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-reactBlue to-reactCyan flex items-center justify-center text-black font-bold shadow-lg shadow-reactCyan/20">
+                <i class="fa-brands fa-react text-xl animate-spin text-white" style="animation-duration: 12s;"></i>
+            </div>
+            <div>
+                <span class="font-mono font-bold text-lg tracking-wider text-white">REACT <span class="text-reactCyan">NATIVE</span></span>
+                <span class="text-xs block text-gray-400 font-mono">Interactive Quiz v1.0</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="score-badge" class="hidden px-3 py-1 bg-reactBlue/20 border border-reactBlue/40 text-reactCyan rounded-full text-sm font-mono font-semibold">
+                Punkty: <span id="current-score-val">0</span>
+            </span>
+            <div class="hidden sm:flex items-center space-x-2 text-xs font-mono text-gray-400 bg-black/40 px-3 py-1.5 rounded-lg border border-darkBorder">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>TypeScript / Expo Mode</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div class="w-full max-w-3xl mx-auto">
+
+            <!-- WELCOME SCREEN -->
+            <div id="screen-welcome" class="code-window rounded-2xl p-6 sm:p-10 transition-all duration-300">
+                <div class="flex items-center justify-between pb-4 mb-6 border-b border-darkBorder">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span class="text-xs font-mono text-gray-400">app/(quiz)/index.tsx</span>
+                </div>
+
+                <div class="text-center my-6">
+                    <div class="inline-block p-4 rounded-3xl bg-reactBlue/10 border border-reactBlue/30 text-reactCyan mb-4 shadow-inner">
+                        <i class="fa-solid fa-graduation-cap text-4xl"></i>
+                    </div>
+                    <h1 class="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight">Sprawdź swoją wiedzę o <span class="text-transparent bg-clip-text bg-gradient-to-r from-reactCyan to-reactBlue">React Native</span></h1>
+                    <p class="text-gray-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+                        Quiz interaktywny oparty na oficjalnych materiałach szkoleniowych. Zmierz się z pytaniami o historię, Expo, strukturę plików, komponenty oraz nawigację!
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8">
+                    
+                </div>
+
+                <div class="flex justify-center pt-4">
+                    <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-reactBlue to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-reactBlue/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 cursor-pointer">
+                        <span>Rozpocznij Quiz</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUIZ SCREEN -->
+            <div id="screen-quiz" class="code-window rounded-2xl p-6 sm:p-10 hidden transition-all duration-300">
+                <!-- Top bar inside quiz -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 mb-6 border-b border-darkBorder gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        </div>
+                        <span id="question-counter" class="text-xs font-mono text-reactCyan bg-reactBlue/10 px-3 py-1 rounded-md border border-reactBlue/30">Pytanie 1 z 10</span>
+                    </div>
+                    <div id="question-type-badge" class="text-xs font-mono bg-amber-500/10 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-md">
+                        Jednokrotnego wyboru
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-black/50 rounded-full h-2 mb-6 overflow-hidden border border-darkBorder">
+                    <div id="progress-bar" class="bg-gradient-to-r from-reactBlue to-reactCyan h-full transition-all duration-300" style="width: 10%;"></div>
+                </div>
+
+                <!-- Question Text -->
+                <div class="mb-6">
+                    <h2 id="question-title" class="text-xl sm:text-2xl font-bold text-white leading-snug">
+                        Ładowanie pytania...
+                    </h2>
+                    <p id="question-hint" class="text-xs text-reactCyan mt-2 font-mono hidden">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Pytanie wielokrotne – zaznacz wszystkie poprawne odpowiedzi.
+                    </p>
+                </div>
+
+                <!-- Options Container -->
+                <div id="options-container" class="space-y-3 mb-8">
+                    <!-- Dynamic options injected here -->
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex justify-between items-center pt-4 border-t border-darkBorder">
+                    <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl text-sm transition-all flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Poprzednie</span>
+                    </button>
+                    <button onclick="handleNext()" id="btn-next" class="px-6 py-3 bg-reactBlue hover:bg-blue-600 text-white font-semibold rounded-xl text-sm shadow-lg shadow-reactBlue/20 transition-all flex items-center space-x-2">
+                        <span id="btn-next-text">Następne pytanie</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUMMARY SCREEN -->
+            <div id="screen-summary" class="code-window rounded-2xl p-6 sm:p-10 hidden transition-all duration-300 text-center">
+                <div class="flex items-center justify-between pb-4 mb-6 border-b border-darkBorder">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    </div>
+                    <span class="text-xs font-mono text-gray-400">app/(quiz)/summary.tsx</span>
+                </div>
+
+                <div class="my-6">
+                    <div id="summary-icon" class="inline-flex p-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-4 shadow-inner text-4xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Quiz zakończony!</h2>
+                    <p id="summary-subtitle" class="text-gray-300 text-sm sm:text-base">Świetna robota! Oto podsumowanie Twojej wiedzy z React Native.</p>
+                </div>
+
+                <div class="bg-black/40 border border-darkBorder p-6 rounded-2xl max-w-md mx-auto my-6">
+                    <div class="text-sm text-gray-400 font-mono mb-1">Twój wynik końcowy</div>
+                    <div class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-reactCyan to-reactBlue font-mono my-2">
+                        <span id="final-score">0</span> / <span id="total-questions">10</span>
+                    </div>
+                    <div id="score-percentage" class="text-sm font-semibold text-emerald-400">100% poprawnych odpowiedzi</div>
+                </div>
+
+                <div id="review-container" class="text-left space-y-4 my-8 max-h-96 overflow-y-auto pr-2">
+                    <!-- Dynamic review items inserted here -->
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4 border-t border-darkBorder">
+                    <button onclick="restartQuiz()" class="px-8 py-3.5 bg-gradient-to-r from-reactBlue to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-reactBlue/30 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Rozwiąz ponownie</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full border-t border-darkBorder py-4 px-6 text-center text-xs text-gray-500 font-mono glass-panel">
+        React Native Interactive Quiz • Dark Blue & White Gradient Modern Style • Oparte na materiałach szkoleniowych
+    </footer>
+
+    <script>
+        // Quiz questions dataset based directly on the uploaded presentation slides
+        const quizData = [
+            {
+                id: 1,
+                type: 'single',
+                question: 'Czym jest React Native i przez jaką firmę został stworzony?',
+                options: [
+                    'Komercyjny silnik gier stworzony przez firmę Google w 2018 roku.',
+                    'Otwartoźródłowy framework do aplikacji mobilnych stworzony przez firmę Facebook (Meta) w 2015 roku.',
+                    'Biblioteka JavaScript przeznaczona wyłącznie do tworzenia stron internetowych w systemie iOS.',
+                    'Wbudowane środowisko systemowe Androida służące do kompilacji kodu C++.'
+                ],
+                correct: 1,
+                explanation: 'React Native to otwartoźródłowy framework stworzony przez firmę Facebook (Meta) w 2015 roku, służący do tworzenia aplikacji na systemy iOS oraz Android przy użyciu wspólnego kodu.'
+            },
+            {
+                id: 2,
+                type: 'single',
+                question: 'Jaka składnia oraz biblioteka stanowią bazę dla React Native?',
+                options: [
+                    'Biblioteka Angular oraz składnia TypeScript',
+                    'Biblioteka React oraz składnia TypeScript',
+                    'Czysty język Java oraz pliki konfiguracyjne XML',
+                    'Swift oraz UIKit dla obu platform'
+                ],
+                correct: 1,
+                explanation: 'React Native opiera się na bibliotece React i wykorzystuje składnię TypeScript.'
+            },
+            {
+                id: 3,
+                type: 'multiple',
+                question: 'Co jest potrzebne do rozpoczęcia pracy i jakie narzędzie najprościej upraszcza konfigurację projektu? (Zaznacz dwie poprawne odpowiedzi)',
+                options: [
+                    'Node.js jako środowisko uruchomieniowe',
+                    'Tradycyjny program Flash Player',
+                    'Expo, które ułatwia konfigurację i szybkie uruchomienie',
+                    'Wymóg posiadania fizycznego urządzenia z systemem Linux'
+                ],
+                correct: [0, 2],
+                explanation: 'Do rozpoczęcia pracy potrzebujemy Node.js oraz środowiska Expo, które upraszcza konfigurację projektu i pozwala szybko uruchomić aplikację.'
+            },
+            {
+                id: 4,
+                type: 'single',
+                question: 'Do czego służy plik _layout.tsx w strukturze projektu opartej o Expo Router?',
+                options: [
+                    'Przechowuje statyczne pliki graficzne oraz czcionki aplikacji.',
+                    'Określa, jak mają być zorganizowane i wyświetlane ekrany znajdujące się w danym folderze (nawigacja).',
+                    'Zawiera globalne hasła dostępu do bazy danych PostgreSQL.',
+                    'Odpowiada za automatyczne usuwanie błędów TypeScript w czasie kompilacji.'
+                ],
+                correct: 1,
+                explanation: 'Plik _layout.tsx określa, jak mają być zorganizowane i wyświetlane ekrany znajdujące się w danym folderze.'
+            },
+            {
+                id: 5,
+                type: 'multiple',
+                question: 'Które z poniższych elementów reprezentują oficjalne komponenty wbudowane w React Native omówione w prezentacji? (Zaznacz wszystkie poprawne)',
+                options: [
+                    '<View> – kontener na inne elementy',
+                    '<Text> – wyświetlanie tekstu',
+                    '<Button> – przycisk',
+                    '<Switch> – przełącznik ON/OFF'
+                ],
+                correct: [0, 1, 2, 3],
+                explanation: 'W prezentacji wymieniono następujące komponenty: <View>, <Text>, <Image>, <TextInput>, <Button> oraz <Switch>.'
+            },
+            {
+                id: 6,
+                type: 'single',
+                question: 'Jaką funkcję pełni komponent <View> w React Native?',
+                options: [
+                    'Służy wyłącznie do odtwarzania filmów wideo w tle aplikacji.',
+                    'Pełni funkcję kontenera na inne elementy (podobnego do elementu div w HTML).',
+                    'Generuje automatyczne raporty błędów sieciowych.',
+                    'Odpowiada za szyfrowanie danych logowania użytkownika.'
+                ],
+                correct: 1,
+                explanation: '<View> pełni funkcję kontenera na inne elementy w strukturze interfejsu.'
+            },
+            {
+                id: 7,
+                type: 'single',
+                question: 'Która właściwość (prop) jest wykorzystywana w komponentach takich jak Pressable do obsługi kliknięć i dotknięć ekranu?',
+                options: [
+                    'onClick',
+                    'onPress',
+                    'onTouchEvent',
+                    'onSelectTap'
+                ],
+                correct: 1,
+                explanation: 'Do obsługi zdarzeń dotknięcia i kliknięcia w React Native wykorzystuje się specjalną właściwość onPress.'
+            },
+            {
+                id: 8,
+                type: 'single',
+                question: 'W jaki sposób realizujemy nawigację pomiędzy ekranami za pomocą Expo Router w plikach kodu?',
+                options: [
+                    'Używając tradycyjnego tagu <a href="..."> znanego ze stron HTML.',
+                    'Używając komponentu <Link href="/profile"> zaimportowanego z expo-router.',
+                    'Tworząc pliki konfiguracyjne w formacie PHP.',
+                    'Za pomocą funkcji systemowej window.redirect().'
+                ],
+                correct: 1,
+                explanation: 'Expo Router pozwala na tworzenie nawigacji m.in. poprzez komponent <Link href="/profile">.'
+            },
+            {
+                id: 9,
+                type: 'multiple',
+                question: 'Które z poniższych stwierdzeń są zaletami React Native wymienionymi w prezentacji? (Zaznacz wszystkie poprawne)',
+                options: [
+                    'Jeden wspólny kod dla wielu platform (iOS i Android)',
+                    'Funkcja Fast Refresh przyspieszająca podgląd zmian',
+                    'Wydajność zawsze wyższa lub równa aplikacjom czysto natywnym',
+                    'Duża społeczność i możliwość tworzenia własnych komponentów'
+                ],
+                correct: [0, 1, 3],
+                explanation: 'Zaletami są: jeden kod dla wielu platform, szybsze tworzenie, Fast Refresh, duża społeczność. W wadach natomiast wymieniono niższą wydajność niż przy aplikacjach natywnych.'
+            },
+            {
+                id: 10,
+                type: 'single',
+                question: 'Jaka wada React Native została bezpośrednio wskazana w podsumowaniu prezentacji?',
+                options: [
+                    'Brak jakiejkolwiek dokumentacji w języku angielskim.',
+                    'Niższa wydajność niż przy aplikacjach natywnych oraz problemy mogące wynikać z aktualizacji.',
+                    'Wymóg pisania kodu wyłącznie w języku C#.',
+                    'Całkowity brak możliwości dodawania zewnętrznych bibliotek.'
+                ],
+                correct: 1,
+                explanation: 'Wśród wad wymieniono m.in. to, że aktualizacje mogą powodować problemy, komponenty są uproszczone oraz wydajność jest niższa niż przy aplikacjach natywnych.'
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = {}; // stores answers per question index
+        let score = 0;
+
+        // DOM elements
+        const screenWelcome = document.getElementById('screen-welcome');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const screenSummary = document.getElementById('screen-summary');
+        const questionCounter = document.getElementById('question-counter');
+        const questionTypeBadge = document.getElementById('question-type-badge');
+        const progressBar = document.getElementById('progress-bar');
+        const questionTitle = document.getElementById('question-title');
+        const questionHint = document.getElementById('question-hint');
+        const optionsContainer = document.getElementById('options-container');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNextText = document.getElementById('btn-next-text');
+        const scoreBadge = document.getElementById('score-badge');
+        const currentScoreVal = document.getElementById('current-score-val');
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = {};
+            score = 0;
+            screenWelcome.classList.add('hidden');
+            screenSummary.classList.add('hidden');
+            screenQuiz.classList.remove('hidden');
+            scoreBadge.classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = quizData[currentQuestionIndex];
+            questionCounter.innerText = `Pytanie ${currentQuestionIndex + 1} z ${quizData.length}`;
+            
+            // Progress percentage
+            const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            questionTitle.innerText = q.question;
+
+            if (q.type === 'multiple') {
+                questionTypeBadge.innerText = 'Wielokrotnego wyboru';
+                questionTypeBadge.className = 'text-xs font-mono bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 px-3 py-1 rounded-md';
+                questionHint.classList.remove('hidden');
+            } else {
+                questionTypeBadge.innerText = 'Jednokrotnego wyboru';
+                questionTypeBadge.className = 'text-xs font-mono bg-amber-500/10 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-md';
+                questionHint.classList.add('hidden');
+            }
+
+            // Render options
+            optionsContainer.innerHTML = '';
+            const currentAnswer = userAnswers[currentQuestionIndex] !== undefined ? userAnswers[currentQuestionIndex] : (q.type === 'multiple' ? [] : null);
+
+            q.options.forEach((opt, idx) => {
+                const isSelected = q.type === 'multiple' ? currentAnswer.includes(idx) : currentAnswer === idx;
+                
+                const btn = document.createElement('div');
+                btn.className = `p-4 rounded-xl border transition-all cursor-pointer flex items-start space-x-3 ${
+                    isSelected 
+                        ? 'bg-reactBlue/20 border-reactCyan text-white shadow-md shadow-reactBlue/10' 
+                        : 'bg-black/30 border-darkBorder text-gray-300 hover:border-gray-600 hover:bg-black/50'
+                }`;
+                
+                const indicator = document.createElement('div');
+                indicator.className = `w-5 h-5 mt-0.5 rounded-${q.type === 'multiple' ? 'md' : 'full'} border flex items-center justify-center shrink-0 ${
+                    isSelected ? 'bg-reactCyan border-reactCyan text-black font-bold text-xs' : 'border-gray-600'
+                }`;
+                if (isSelected) {
+                    indicator.innerHTML = q.type === 'multiple' ? '<i class="fa-solid fa-check"></i>' : '<div class="w-2 h-2 rounded-full bg-black"></div>';
+                }
+
+                const textSpan = document.createElement('div');
+                textSpan.className = 'text-sm sm:text-base leading-relaxed';
+                textSpan.innerText = opt;
+
+                btn.appendChild(indicator);
+                btn.appendChild(textSpan);
+
+                btn.onclick = () => selectOption(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Prev button state
+            btnPrev.disabled = currentQuestionIndex === 0;
+            // Next button text
+            if (currentQuestionIndex === quizData.length - 1) {
+                btnNextText.innerText = 'Zakończ i zobacz wynik';
+            } else {
+                btnNextText.innerText = 'Następne pytanie';
+            }
+        }
+
+        function selectOption(optIdx) {
+            const q = quizData[currentQuestionIndex];
+            if (q.type === 'single') {
+                userAnswers[currentQuestionIndex] = optIdx;
+            } else {
+                if (!userAnswers[currentQuestionIndex]) {
+                    userAnswers[currentQuestionIndex] = [];
+                }
+                const arr = userAnswers[currentQuestionIndex];
+                const idxInArr = arr.indexOf(optIdx);
+                if (idxInArr > -1) {
+                    arr.splice(idxInArr, 1);
+                } else {
+                    arr.push(optIdx);
+                }
+            }
+            renderQuestion();
+        }
+
+        function handleNext() {
+            // Check if user answered current question
+            const ans = userAnswers[currentQuestionIndex];
+            const q = quizData[currentQuestionIndex];
+            const isAnswered = q.type === 'multiple' ? (ans && ans.length > 0) : (ans !== undefined && ans !== null);
+
+            if (!isAnswered) {
+                // Show gentle notification or highlight instead of alert()
+                showToast('Proszę zaznaczyć przynajmniej jedną odpowiedź przed przejściem dalej.');
+                return;
+            }
+
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function showToast(message) {
+            const existingToast = document.getElementById('custom-toast');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'custom-toast';
+            toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black font-semibold px-6 py-3 rounded-xl shadow-2xl z-50 transition-all flex items-center space-x-2 text-sm';
+            toast.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function finishQuiz() {
+            // Calculate score
+            score = 0;
+            quizData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                if (q.type === 'single') {
+                    if (userAns === q.correct) score++;
+                } else {
+                    if (userAns && Array.isArray(userAns)) {
+                        const sortedUser = [...userAns].sort();
+                        const sortedCorrect = [...q.correct].sort();
+                        if (sortedUser.length === sortedCorrect.length && sortedUser.every((val, i) => val === sortedCorrect[i])) {
+                            score++;
+                        }
+                    }
+                }
+            });
+
+            currentScoreVal.innerText = score;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('total-questions').innerText = quizData.length;
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('score-percentage').innerText = `${percentage}% poprawnych odpowiedzi`;
+
+            // Build review container
+            const reviewContainer = document.getElementById('review-container');
+            reviewContainer.innerHTML = '<h3 class="text-white font-bold text-base mb-3"><i class="fa-solid fa-clipboard-list mr-2 text-reactCyan"></i>Szczegółowy przegląd odpowiedzi:</h3>';
+
+            quizData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                let isCorrect = false;
+                if (q.type === 'single') {
+                    isCorrect = (userAns === q.correct);
+                } else {
+                    if (userAns && Array.isArray(userAns)) {
+                        const sortedUser = [...userAns].sort();
+                        const sortedCorrect = [...q.correct].sort();
+                        isCorrect = (sortedUser.length === sortedCorrect.length && sortedUser.every((val, i) => val === sortedCorrect[i]));
+                    }
+                }
+
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-xl border ${isCorrect ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'}`;
+                
+                let optionsHtml = '<ul class="mt-2 space-y-1 text-xs sm:text-sm font-mono">';
+                q.options.forEach((opt, optIdx) => {
+                    let badgeColor = 'text-gray-400';
+                    let icon = '';
+                    const isOptCorrect = q.type === 'single' ? (q.correct === optIdx) : q.correct.includes(optIdx);
+                    const isOptUser = q.type === 'single' ? (userAns === optIdx) : (userAns && userAns.includes(optIdx));
+
+                    if (isOptCorrect) {
+                        badgeColor = 'text-emerald-400 font-semibold';
+                        icon = '<i class="fa-solid fa-check text-emerald-400 mr-1.5"></i>';
+                    } else if (isOptUser && !isOptCorrect) {
+                        badgeColor = 'text-rose-400 line-through';
+                        icon = '<i class="fa-solid fa-xmark text-rose-400 mr-1.5"></i>';
+                    } else {
+                        icon = '<i class="fa-solid fa-circle text-[6px] text-gray-600 mr-2 ml-1"></i>';
+                    }
+
+                    optionsHtml += `<li class="${badgeColor} flex items-center">${icon}${opt}</li>`;
+                });
+                optionsHtml += '</ul>';
+
+                item.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <span class="text-xs font-mono text-gray-400">Pytanie ${idx + 1}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-md font-semibold ${isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+                            ${isCorrect ? 'Poprawnie' : 'Błędnie'}
+                        </span>
+                    </div>
+                    <div class="text-white font-medium text-sm sm:text-base mt-1">${q.question}</div>
+                    ${optionsHtml}
+                    <div class="mt-3 text-xs text-gray-300 bg-black/40 p-2.5 rounded-lg border border-darkBorder font-sans">
+                        <span class="text-reactCyan font-semibold">Wyjaśnienie:</span> ${q.explanation}
+                    </div>
+                `;
+                reviewContainer.appendChild(item);
+            });
+
+            screenQuiz.classList.add('hidden');
+            screenSummary.classList.remove('hidden');
+            scoreBadge.classList.add('hidden');
+        }
+
+        function restartQuiz() {
+            screenSummary.classList.add('hidden');
+            screenWelcome.classList.remove('hidden');
+        }
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"2afe0383e42346af94c5c4bc40fbb0c0","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
