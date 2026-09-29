@@ -24,9 +24,17 @@ import {Player} from "./player";
 type ButtonValue = "blue" | "red" | "green" | "yellow";
 
 
-/*
- * Rysowanie okręgu
- */
+
+
+
+function jacekmahiv(){
+
+    const jacek = mahiv;
+
+}
+
+
+
 function DrawCircle(
     radius: number,
     centerX: number,
@@ -53,9 +61,7 @@ function DrawCircle(
 }
 
 
-/*
- * Okrąg na arenie
- */
+
 function GeneratePath(
     radius: number,
     centerX: number,
@@ -73,9 +79,6 @@ function GeneratePath(
 }
 
 
-/*
- * Tło
- */
 function GenerateBackground(
     background: ReturnType<typeof useImage>,
     width: number,
@@ -98,9 +101,7 @@ function GenerateBackground(
 }
 
 
-/*
- * Przyciski w rogach ekranu
- */
+
 function GenerateCornerButtons(
     onPress: (value: ButtonValue) => void
 ) {
@@ -110,7 +111,7 @@ function GenerateCornerButtons(
             pointerEvents="box-none"
         >
 
-            {/* LEWY GÓRNY - ŻÓŁTY */}
+
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -126,7 +127,7 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* PRAWY GÓRNY - NIEBIESKI */}
+
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -142,7 +143,7 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* LEWY DOLNY - CZERWONY */}
+
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -158,7 +159,6 @@ function GenerateCornerButtons(
             </Pressable>
 
 
-            {/* PRAWY DOLNY - ZIELONY */}
             <Pressable
                 style={({ pressed }) => [
                     styles.button,
@@ -177,18 +177,14 @@ function GenerateCornerButtons(
     );
 }
 
-/*
- * Główny ekran gry
- */
+
 export default function Index() {
 
     const { width, height } = useWindowDimensions();
 
     const radius = 175;
 
-    /*
-     * Obrazy
-     */
+ 
     const background = useImage(
         require("../../assets/images/background.png")
     );
@@ -198,25 +194,17 @@ export default function Index() {
     );
 
 
-    /*
-     * Boss i Game przechowywane w ref,
-     * żeby nie tworzyć ich ponownie przy każdym renderze.
-     */
+
     const bossRef = useRef<Boss | null>(null);
     const gameRef = useRef<Game | null>(null);
     const playersRef = useRef<Player[]>([]);
 
 
-    /*
-     * Wymusza ponowne rysowanie ekranu
-     * po każdym klatce gry.
-     */
+
     const [, forceRender] = useState<number>(0);
 
 
-    /*
-     * Utworzenie bossa i gry
-     */
+
     if (
         bossRef.current === null &&
         boss_img !== null
@@ -235,7 +223,6 @@ export default function Index() {
 
         playersRef.current = [
 
-            // ŻÓŁTY
             new Player(
                 bossX,
                 bossY,
@@ -246,7 +233,6 @@ export default function Index() {
                 0
             ),
 
-            // NIEBIESKI
             new Player(
                 bossX,
                 bossY,
@@ -257,7 +243,6 @@ export default function Index() {
                 Math.PI / 2
             ),
 
-            // ZIELONY
             new Player(
                 bossX,
                 bossY,
@@ -268,7 +253,6 @@ export default function Index() {
                 Math.PI
             ),
 
-            // CZERWONY
             new Player(
                 bossX,
                 bossY,
@@ -288,9 +272,7 @@ export default function Index() {
     }
 
 
-    /*
-     * Pętla gry
-     */
+
     useEffect(() => {
 
         if (!gameRef.current) {
@@ -298,9 +280,7 @@ export default function Index() {
         }
 
 
-        /*
-         * Uruchomienie gry
-         */
+
         gameRef.current.start();
 
 
@@ -338,9 +318,6 @@ export default function Index() {
             requestAnimationFrame(gameLoop);
 
 
-        /*
-         * Czyszczenie po opuszczeniu ekranu
-         */
         return () => {
 
             cancelAnimationFrame(
@@ -353,9 +330,6 @@ export default function Index() {
     }, [boss_img]);
 
 
-    /*
-     * Obsługa przycisków
-     */
     const handleButtonPress = (
         value: ButtonValue
     ) => {
@@ -395,13 +369,11 @@ export default function Index() {
         <View style={styles.container}>
 
             <StatusBar hidden />
-            {/* ========================= */}
-            {/* GRA */}
-            {/* ========================= */}
+
 
             <Canvas style={styles.canvas}>
 
-                {/* TŁO */}
+                {}
                 {GenerateBackground(
                     background,
                     width,
@@ -409,7 +381,7 @@ export default function Index() {
                 )}
 
 
-                {/* OKRĄG ARENY */}
+                {}
                 {GeneratePath(
                     radius,
                     width / 2,
@@ -418,7 +390,7 @@ export default function Index() {
                 )}
 
 
-                {/* BOSS */}
+
                 {bossRef.current?.draw(
                     boss_img
                 )}
@@ -453,9 +425,7 @@ export default function Index() {
             </Canvas>
 
 
-            {/* ========================= */}
-            {/* PRZYCISKI */}
-            {/* ========================= */}
+
 
             {GenerateCornerButtons(
                 handleButtonPress
@@ -466,9 +436,7 @@ export default function Index() {
 }
 
 
-/*
- * STYLE
- */
+
 const styles = StyleSheet.create({
 
     container: {
@@ -481,9 +449,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Kontener zajmuje cały ekran.
-     */
+
     buttonsContainer: {
         position: "absolute",
         top: 0,
@@ -493,9 +459,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Rozmiar pojedynczego przycisku.
-     */
+
     button: {
         position: "absolute",
 
@@ -504,9 +468,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * Sam obraz przycisku.
-     */
+
     buttonImage: {
         width: "100%",
         height: "100%",
@@ -515,9 +477,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /*
-     * LEWY GÓRNY
-     */
+
     topLeft: {
         top: -15,
         left: -15,
