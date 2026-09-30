@@ -5,9 +5,9 @@ export interface Phase {
     isFinished: boolean;
     start(bossX: number, bossY: number, arenaRadius: number): void;
     update(deltaTime: number): void;
+
     getFireballs(): Fireball[];
     getMarkers(): ArenaMarker[];
-
     getTongue?(): { x1: number; y1: number; x2: number; y2: number; angle: number } | null;
     getSector?(): { startAngle: number; sweepAngle: number; isDanger: boolean; opacity: number } | null;
     checkCustomCollisions?(players: any[]): void;
