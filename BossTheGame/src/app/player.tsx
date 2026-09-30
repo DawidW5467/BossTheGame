@@ -22,15 +22,8 @@ export class Player {
 
     angle: number;
 
-    /*
-     * 1  = zgodnie z ruchem wskazówek zegara
-     * -1 = przeciwnie do ruchu wskazówek zegara
-     */
     direction: 1 | -1;
 
-    /*
-     * Prędkość w radianach na sekundę
-     */
     speed: number;
 
     color: PlayerColor;
@@ -72,10 +65,6 @@ export class Player {
         this.isAlive = true;
     }
 
-
-    /*
-     * Zmiana kierunku ruchu
-     */
     changeDirection() {
 
         this.direction =
@@ -85,9 +74,6 @@ export class Player {
     }
 
 
-    /*
-     * Aktualizacja pozycji gracza
-     */
     update(deltaTime: number) {
 
         /*
@@ -98,10 +84,6 @@ export class Player {
             this.direction *
             deltaTime;
 
-
-        /*
-         * Wyliczenie pozycji na okręgu
-         */
         this.x =
             this.centerX +
             Math.cos(this.angle) * this.radius;
@@ -111,10 +93,6 @@ export class Player {
             Math.sin(this.angle) * this.radius;
     }
 
-
-    /*
-     * Rysowanie gracza
-     */
     draw(img: ReturnType<typeof useImage>) {
 
         if (!img || !this.isAlive) {

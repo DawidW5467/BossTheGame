@@ -473,10 +473,6 @@ export default function Index() {
     );
 }
 
-
-/*
- raz dwa dwa trzy cztery player games to moja gra michał wojtas się nazywam i w kurczaki wciąż wygrywam moja torba to mój skarb żyd na karku wciąż ma garb od king vona zjadłem dreda tu przystanek tu forteca bosss na mapie to nie żąrt te pieczarki to jest bart kiedy gościsz u mnie w dzielni to napewno zjesz w pizzerni jesteśmy głodni jak ptaki ten bogracz to nie są flaki 
- */
 const styles = StyleSheet.create({
 
     container: {

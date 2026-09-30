@@ -7,10 +7,8 @@ export default function MenuScreen() {
   const router = useRouter();
 
   const [phases, setPhases] = useState(gameState.phases);
-  // Stan punktów w React
   const [scores, setScores] = useState({ ...gameState.scores });
 
-  // 👉 KLUCZOWE: za każdym razem, gdy wracasz na ten ekran, pobieramy najświeższe punkty!
   useFocusEffect(
       useCallback(() => {
         setScores({ ...gameState.scores });
@@ -38,7 +36,6 @@ export default function MenuScreen() {
         <Text style={styles.title}>BossTheGame</Text>
         <Text style={styles.subtitle}>Wybór Faz & Wyniki</Text>
 
-        {/* TABELA WYNIKÓW */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Synowie Bosa:</Text>
 
@@ -67,7 +64,6 @@ export default function MenuScreen() {
           </Pressable>
         </View>
 
-        {/* WYBÓR FAZ */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Aktywne Fazy:</Text>
 
@@ -92,7 +88,6 @@ export default function MenuScreen() {
           </View>
         </View>
 
-        {/* PRZYCISK START */}
         <Pressable style={styles.playButton} onPress={handleStartGame}>
           <Text style={styles.playButtonText}>ROZPOCZNIJ GRĘ</Text>
         </Pressable>
